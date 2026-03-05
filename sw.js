@@ -1,17 +1,42 @@
+const CACHE_NAME = 'junior-fretes-store-v2';
+const urlsToCache = [
+    './',
+    './index.html',
+    './manifest.json',
+    './script.js',
+    './style.css'
+];
+
 self.addEventListener('install', (e) => {
     e.waitUntil(
-        caches.open('junior-fretes-store').then((cache) => cache.addAll([
-            './',
-            './index.html',
-            './manifest.json',
-            './style.css',
-            './script.js'
-        ]))
+        caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+    );
+});
+
+self.addEventListener('activate', (e) => {
+    e.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
     );
 });
 
 self.addEventListener('fetch', (e) => {
     e.respondWith(
-        caches.match(e.request).then((response) => response || fetch(e.request))
+        fetch(e.request)
+            .then((response) => {
+                const responseClone = response.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(e.request, responseClone);
+                });
+                return response;
+            })
+            .catch(() => caches.match(e.request))
     );
 });
