@@ -1,4 +1,4 @@
-const CACHE_NAME = 'junior-fretes-store-v2';
+const CACHE_NAME = 'junior-fretes-store-v3';
 const urlsToCache = [
     './',
     './index.html',
@@ -8,6 +8,8 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', (e) => {
+    // Force active
+    self.skipWaiting();
     e.waitUntil(
         caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
     );
@@ -25,6 +27,8 @@ self.addEventListener('activate', (e) => {
             );
         })
     );
+    // Take over immediately
+    return self.clients.claim();
 });
 
 self.addEventListener('fetch', (e) => {

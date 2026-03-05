@@ -127,15 +127,16 @@ async function receberPagamento() {
 
 async function cadastrarCliente() {
     const nomeInput = document.getElementById('novoClienteNome');
-    const nome = nomeInput.value.trim();
+    if (!nomeInput) return; // avoid errors if this DOM is missing
 
+    const nome = nomeInput.value.trim();
     if (!nome) return alert("Digite o nome do cliente!");
 
     setCarregando(true);
     try {
         const resp = await fetch(API_URL, {
             method: 'POST',
-            body: JSON.stringify({ op: 'criarCliente', nome: nome })
+            body: JSON.stringify({ op: 'criarCliente', nome: nome, telefone: "", cpf: "" })
         });
         const json = await resp.json();
 
@@ -149,7 +150,7 @@ async function cadastrarCliente() {
             alert("Erro ao salvar cliente: " + json.erro);
         }
     } catch (e) {
-        alert("Erro de conexão ao salvar cliente.");
+        alert("Erro de conexão ao salvar cliente: " + e.message);
     } finally {
         setCarregando(false);
         // Recarregar para garantir sincronia (opcional)
