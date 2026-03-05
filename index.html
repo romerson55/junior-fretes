@@ -648,7 +648,7 @@
                 </div>
                 <button class="submit-btn" onclick="saveConfig()">Salvar Configuração</button>
                 <div style="margin-top: 20px; font-size: 0.8rem; color: var(--text-muted);">
-                    ID do Versão: 2.1.0 (Junior Edition)
+                    ID do Versão: 2.2.0 (Junior Edition)
                 </div>
             </div>
         </div>
@@ -863,8 +863,12 @@
 
             // Hook into entryCategory change to show/hide client
             document.getElementById('entryCategory').addEventListener('change', (e) => {
+                const val = e.target.value;
                 const groupCliente = document.getElementById('groupCliente');
-                groupCliente.style.display = (e.target.value === 'Frete' || e.target.value === 'Uber' || e.target.value === 'Agendamento') ? 'block' : 'none';
+                groupCliente.style.display = (val === 'Frete' || val === 'Uber' || val === 'Agendamento') ? 'block' : 'none';
+
+                // Auto-preencher a descrição ao trocar de categoria
+                document.getElementById('entryDesc').value = val + " " + new Date().toLocaleDateString('pt-BR');
             });
 
             // Masks for Form inputs
