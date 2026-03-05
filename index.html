@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Junior Fretes e Uber</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #FFD700;
+            /* Gold/Yellow for Uber/Junior */
+            --primary-dark: #ccac00;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 80px;
+            /* Space for bottom nav */
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(255, 215, 0, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 10px 0;
+        }
+
+        .brand h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), #fff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .refresh-btn {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .refresh-btn:active {
+            transform: rotate(180deg);
+        }
+
+        /* Main Dashboard Card */
+        .balance-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            border-radius: 24px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .balance-card h2 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .balance-card .amount {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 16px;
+            text-align: left;
+        }
+
+        .stat-item span {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .stat-item .val {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .stat-item.up .val {
+            color: var(--success);
+        }
+
+        .stat-item.down .val {
+            color: var(--danger);
+        }
+
+        .method-split {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .split-item {
+            text-align: center;
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .split-item span {
+            display: block;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+        }
+
+        .split-item.pix div {
+            color: #32bcad;
+            font-weight: bold;
+        }
+
+        .split-item.money div {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        /* Quick Actions */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .action-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            padding: 15px 5px;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .action-btn i {
+            font-size: 1.5rem;
+        }
+
+        .action-btn.uber i {
+            color: #fff;
+        }
+
+        .action-btn.frete i {
+            color: var(--primary);
+        }
+
+        .action-btn.gas i {
+            color: #fb923c;
+        }
+
+        .action-btn.calc i {
+            color: var(--primary);
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .action-btn span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Recent Activity */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .activity-item {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid var(--glass-border);
+            animation: slideUp 0.5s ease-out forwards;
+        }
+
+        .activity-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .activity-icon.in {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+
+        .activity-icon.out {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .activity-icon.fuel {
+            background: rgba(251, 146, 60, 0.1);
+            color: #fb923c;
+        }
+
+        .activity-info {
+            flex: 1;
+        }
+
+        .activity-info h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .activity-info p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .activity-amount {
+            text-align: right;
+        }
+
+        .activity-amount .val {
+            font-weight: 700;
+            font-size: 1rem;
+            display: block;
+        }
+
+        .activity-amount .date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Modal / Form Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal {
+            background: var(--bg);
+            border: 1px solid var(--glass-border);
+            width: 100%;
+            max-width: 450px;
+            border-radius: 28px;
+            padding: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-group select option {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 18px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Bottom Nav */
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 10px;
+            z-index: 900;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .nav-item i {
+            font-size: 1.2rem;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        /* Page Content Visibility */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loader */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary);
+            z-index: 2000;
+            display: none;
+            animation: loading 2s infinite ease-in-out;
+            transform-origin: 0% 50%;
+        }
+
+        @keyframes loading {
+            0% {
+                transform: scaleX(0);
+            }
+
+            50% {
+                transform: scaleX(1);
+            }
+
+            100% {
+                transform: scaleX(0);
+                transform-origin: 100% 50%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loader"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <h1>Junior Fretes e Uber</h1>
+                <p id="systemStatus">Sincronizado</p>
+            </div>
+            <button class="refresh-btn" onclick="syncData()">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </header>
+
+        <!-- PAGE: HOME -->
+        <div id="page-home" class="page active">
+            <!-- Balance Card -->
+            <div class="balance-card">
+                <h2>Saldo em Caixa</h2>
+                <div class="amount" id="currentBalance">R$ 0,00</div>
+                <div class="stats-grid">
+                    <div class="stat-item up">
+                        <span>Total Ganhos</span>
+                        <div class="val" id="totalIn">R$ 0,00</div>
+                    </div>
+                    <div class="stat-item down">
+                        <span>Total Gastos</span>
+                        <div class="val" id="totalOut">R$ 0,00</div>
+                    </div>
+                </div>
+                <div class="method-split">
+                    <div class="split-item pix">
+                        <span><i class="fab fa-pix"></i> PIX</span>
+                        <div id="totalPix">R$ 0,00</div>
+                    </div>
+                    <div class="split-item money">
+                        <span><i class="fas fa-money-bill-wave"></i> Dinheiro</span>
+                        <div id="totalMoney">R$ 0,00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="section-title">
+                <i class="fas fa-rocket"></i> Lançar Rápido
+            </div>
+            <div class="quick-actions">
+                <div class="action-btn uber" onclick="openModal('entrada', 'Uber')">
+                    <i class="fab fa-uber"></i>
+                    <span>Uber</span>
+                </div>
+                <div class="action-btn frete" onclick="openModal('entrada', 'Frete')">
+                    <i class="fas fa-box"></i>
+                    <span>Frete</span>
+                </div>
+                <div class="action-btn gas" onclick="openModal('saida', 'Combustível')">
+                    <i class="fas fa-gas-pump"></i>
+                    <span>Combustível</span>
+                </div>
+                <div class="action-btn calc" onclick="openCalcModal()">
+                    <i class="fas fa-calculator"></i>
+                    <span>Calculadora</span>
+                </div>
+            </div>
+
+            <!-- Clientes -->
+            <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fas fa-users"></i> Meus Clientes</span>
+                <button onclick="openClienteModal()"
+                    style="background: var(--primary); color: #000; border: none; padding: 5px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;">+
+                    Cliente</button>
+            </div>
+            <div class="activity-list" id="homeClientList">
+                <p style="text-align: center; color: var(--text-muted); padding: 20px;">Carregando...</p>
+            </div>
+        </div>
+
+        <!-- PAGE: HISTORICO -->
+        <div id="page-history" class="page">
+            <div class="section-title">
+                <i class="fas fa-list-ul"></i> Histórico Completo
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="date" id="historyDateStart"
+                    style="flex: 1; background: var(--card-bg); color: #fff; border: 1px solid var(--glass-border); padding: 10px; border-radius: 12px; outline: none;"
+                    onchange="renderHistory()">
+                <input type="date" id="historyDateEnd"
+                    style="flex: 1; background: var(--card-bg); color: #fff; border: 1px solid var(--glass-border); padding: 10px; border-radius: 12px; outline: none;"
+                    onchange="renderHistory()">
+            </div>
+            <div class="activity-list" id="fullHistory">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- PAGE: AGENDA -->
+        <div id="page-agenda" class="page">
+            <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fas fa-calendar-alt"></i> Agendamentos</span>
+                <button onclick="openAgendaModal()"
+                    style="background: var(--primary); color: #000; border: none; padding: 5px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;">+
+                    Agendar</button>
+            </div>
+            <div class="activity-list" id="agendaList">
+                <p style="text-align: center; color: var(--text-muted); padding: 20px;">Carregando...</p>
+            </div>
+        </div>
+
+        <!-- PAGE: CONFIG -->
+        <div id="page-config" class="page">
+            <div class="section-title">
+                <i class="fas fa-cog"></i> Configurações
+            </div>
+            <div class="modal" style="max-width: none; background: var(--card-bg);">
+                <div class="form-group">
+                    <label>URL do Google Apps Script</label>
+                    <input type="text" id="apiUrlInput" placeholder="https://script.google.com/...">
+                </div>
+                <button class="submit-btn" onclick="saveConfig()">Salvar Configuração</button>
+                <div style="margin-top: 20px; font-size: 0.8rem; color: var(--text-muted);">
+                    ID do Versão: 2.1.0 (Junior Edition)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav>
+        <a href="#" class="nav-item active" onclick="showPage('home')" id="nav-home">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showPage('history')" id="nav-history">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Histórico</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showPage('agenda')" id="nav-agenda">
+            <i class="fas fa-calendar-check"></i>
+            <span>Agenda</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showPage('config')" id="nav-config">
+            <i class="fas fa-user-circle"></i>
+            <span>Perfil</span>
+        </a>
+    </nav>
+
+    <!-- Modal Entry -->
+    <div class="overlay" id="entryOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Novo Lançamento</h3>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="entryForm">
+                <input type="hidden" id="entryType">
+                <input type="hidden" id="entryCategoryDefault">
+
+                <div class="form-group" id="groupCliente" style="display: none;">
+                    <label>Cliente Fixo (Opcional)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="entryCliente"
+                            style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); padding: 15px; border-radius: 12px; color: #fff;">
+                            <option style="background-color: #0f172a; color: #fff;" value="">Sem Cliente...</option>
+                        </select>
+                        <button type="button" onclick="novoCliente()"
+                            style="background: var(--glass); color: #fff; border: 1px solid var(--glass-border); border-radius: 12px; padding: 0 15px; font-weight: bold; font-size: 1.2rem;">+</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="entryDesc" placeholder="Ex: Corrida Uber / Frete Centro">
+                </div>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="entryValue" step="0.01" placeholder="0,00">
+                </div>
+                <div class="form-group" id="groupMetodo">
+                    <label>Método de Recebimento</label>
+                    <select id="entryMethod">
+                        <option value="PIX">PIX ⚡</option>
+                        <option value="DINHEIRO">Dinheiro 💵</option>
+                        <option value="CARTAO">Cartão 💳</option>
+                        <option value="APP">Aplicativo (Uber/99)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="entryCategory">
+                        <option value="Uber">Uber</option>
+                        <option value="Frete">Frete</option>
+                        <option value="Combustível">Combustível</option>
+                        <option value="Alimentacao">Alimentação</option>
+                        <option value="Manutencao">Manutenção</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn" id="saveEntryBtn">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Cliente -->
+    <div class="overlay" id="clienteOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Novo Cliente</h3>
+                <button class="close-modal" onclick="closeClienteModal()">&times;</button>
+            </div>
+            <form id="clienteForm">
+                <input type="hidden" id="clienteIdHidden">
+                <div class="form-group">
+                    <label>Nome Completo (ou Empresa)</label>
+                    <input type="text" id="clienteNome" required placeholder="Ex: Maria do Bolo">
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp</label>
+                    <input type="text" id="clienteWhatsapp" placeholder="Ex: 11999999999" required>
+                </div>
+                <div class="form-group">
+                    <label>CPF / CNPJ (Opcional)</label>
+                    <input type="text" id="clienteCpf" placeholder="Apenas números">
+                </div>
+                <button type="submit" class="submit-btn"
+                    style="width: 100%; background: var(--primary); color: #000; padding: 15px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer;">Salvar
+                    Cliente</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Calculadora -->
+    <div class="overlay" id="calcOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Calculadora de Frete</h3>
+                <button class="close-modal" onclick="closeCalcModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Valor por KM (R$)</label>
+                <input type="number" id="calcValorKm" step="0.01" placeholder="Ex: 2.50" oninput="updateCalcResult()">
+                <div style="text-align: right; margin-top: 5px;">
+                    <button type="button" onclick="saveCalcKm()"
+                        style="background: none; border: none; color: var(--info); cursor: pointer; font-size: 0.8rem;">Salvar
+                        KM Fixo</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Total de KMs da Rota</label>
+                <input type="number" id="calcTotalKm" step="0.1" placeholder="Ex: 25" oninput="updateCalcResult()">
+            </div>
+
+            <div
+                style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                <span style="color: var(--text-muted); font-size: 0.9rem;">Valor Sugerido</span>
+                <div id="calcResultDisplay"
+                    style="font-size: 2rem; font-weight: bold; color: var(--success); margin-top: 5px;">R$ 0,00</div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="button" class="submit-btn"
+                    style="flex: 1; background: var(--glass); color: #fff; border: 1px solid var(--glass-border);"
+                    onclick="usarValorCalc('Agendamento')">Agendar</button>
+                <button type="button" class="submit-btn" style="flex: 1;" onclick="usarValorCalc('Frete')">Lançar
+                    Agora</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Agenda -->
+    <div class="overlay" id="agendaOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Novo Agendamento</h3>
+                <button class="close-modal" onclick="closeAgendaModal()">&times;</button>
+            </div>
+            <form id="agendaForm">
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="agendaData" required>
+                </div>
+                <div class="form-group">
+                    <label>Hora</label>
+                    <input type="time" id="agendaHora">
+                </div>
+                <div class="form-group">
+                    <label>Cliente (Opcional)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="agendaClienteSelect"
+                            style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); padding: 15px; border-radius: 12px; color: #fff;">
+                            <option style="background-color: #0f172a; color: #fff;" value="">Selecione...</option>
+                        </select>
+                        <button type="button" onclick="novoCliente()"
+                            style="background: var(--glass); color: #fff; border: 1px solid var(--glass-border); border-radius: 12px; padding: 0 15px; font-weight: bold; font-size: 1.2rem;">+</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Detalhes (Destino / Mercadoria)</label>
+                    <input type="text" id="agendaDetalhes" placeholder="Ex: Buscar cama no Centro">
+                </div>
+                <div class="form-group">
+                    <label>Valor Combinado (R$)</label>
+                    <input type="number" id="agendaValor" step="0.01" placeholder="0,00">
+                </div>
+                <button type="submit" class="submit-btn"
+                    style="width: 100%; background: var(--primary); color: #000; padding: 15px; border-radius: 12px; font-weight: bold; border: none; cursor: pointer;">Agendar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let API_URL = localStorage.getItem('junior_fretes_api') || "";
+
+        let transacoes = [];
+        let entradas = [];
+        let saidas = [];
+        let clientes = [];
+        let agenda = [];
+        let isLoading = false;
+        let lastSyncTimestamp = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('apiUrlInput').value = API_URL;
+            syncData(true);
+
+            // Auto Update background polling every 2 seconds
+            setInterval(() => {
+                syncData(false);
+            }, 2000);
+
+            document.getElementById('entryForm').addEventListener('submit', handleEntrySubmit);
+            document.getElementById('agendaForm').addEventListener('submit', handleAgendaSubmit);
+            document.getElementById('clienteForm').addEventListener('submit', handleClienteSubmit);
+
+            // Hook into entryCategory change to show/hide client
+            document.getElementById('entryCategory').addEventListener('change', (e) => {
+                const groupCliente = document.getElementById('groupCliente');
+                groupCliente.style.display = (e.target.value === 'Frete' || e.target.value === 'Uber' || e.target.value === 'Agendamento') ? 'block' : 'none';
+            });
+
+            // Masks for Form inputs
+            document.getElementById('clienteCpf').addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length <= 11) {
+                    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+                    v = v.replace(/(\d{3})(\d)/, '$1.$2');
+                    v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                } else {
+                    v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+                    v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                    v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                    v = v.replace(/(\d{4})(\d)$/, '$1-$2');
+                }
+                e.target.value = v.substring(0, 18);
+            });
+
+            document.getElementById('clienteWhatsapp').addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                v = v.replace(/^(\d{2})(\d)/g, '($1) $2');
+                v = v.replace(/(\d)(\d{4})$/, '$1-$2');
+                e.target.value = v.substring(0, 15);
+            });
+
+            // Clear history dates so all entries show by default
+            document.getElementById('historyDateStart').value = '';
+            document.getElementById('historyDateEnd').value = '';
+        });
+
+        async function syncData(showLoadIndicator = false) {
+            if (isLoading && showLoadIndicator) return;
+            if (showLoadIndicator) showLoader(true);
+            try {
+                const url = `${API_URL}?op=ler&ts=${lastSyncTimestamp}&t=${Date.now()}`;
+                const resp = await fetch(url);
+                const data = await resp.json();
+
+                if (data.sucesso) {
+                    if (data.modificado === false) {
+                        // Data hasn't changed on server, do not redraw UI, just update clock
+                        document.getElementById('systemStatus').textContent = "Atualizado: " + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        return;
+                    }
+
+                    lastSyncTimestamp = data.timestamp || 0;
+                    entradas = data.entradas || [];
+                    saidas = data.saidas || [];
+                    clientes = data.clientes || [];
+                    agenda = data.agenda || [];
+
+                    renderDashboard();
+                    renderHistory();
+                    renderAgenda();
+                    populateClientes();
+
+                    document.getElementById('systemStatus').textContent = "Atualizado: " + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                }
+            } catch (e) {
+                console.error(e);
+                if (showLoadIndicator) document.getElementById('systemStatus').textContent = "Erro na sincronização";
+            } finally {
+                if (showLoadIndicator) showLoader(false);
+            }
+        }
+
+        function populateClientes() {
+            const entrySelect = document.getElementById('entryCliente');
+            const agendaSelect = document.getElementById('agendaClienteSelect');
+
+            let htmlOptions = '<option style="background-color: #0f172a; color: #fff;" value="">Cliente Não Cadastrado (Em Branco)</option>';
+            clientes.sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''))).forEach(c => {
+                htmlOptions += `<option style="background-color: #0f172a; color: #fff;" value="${c.nome}">${c.nome}</option>`;
+            });
+
+            if (entrySelect.options.length !== clientes.length + 1) {
+                const prevEntry = entrySelect.value;
+                const prevAgenda = agendaSelect.value;
+                entrySelect.innerHTML = htmlOptions;
+                agendaSelect.innerHTML = htmlOptions;
+                if (prevEntry) entrySelect.value = prevEntry;
+                if (prevAgenda) agendaSelect.value = prevAgenda;
+            }
+        }
+
+        function openClienteModal(isEdit = false) {
+            document.getElementById('clienteOverlay').style.display = 'flex';
+            if (!isEdit) {
+                document.getElementById('clienteIdHidden').value = '';
+                document.getElementById('clienteNome').value = '';
+                document.getElementById('clienteWhatsapp').value = '';
+                document.getElementById('clienteCpf').value = '';
+                document.querySelector('#clienteOverlay h3').textContent = 'Novo Cliente';
+            } else {
+                document.querySelector('#clienteOverlay h3').textContent = 'Editar Cliente';
+            }
+        }
+
+        function closeClienteModal() {
+            document.getElementById('clienteOverlay').style.display = 'none';
+        }
+
+        async function handleClienteSubmit(e) {
+            e.preventDefault();
+            const nome = document.getElementById('clienteNome').value;
+            const whatsapp = document.getElementById('clienteWhatsapp').value;
+            const idHidden = document.getElementById('clienteIdHidden').value;
+            if (!nome) return;
+
+            showLoader(true);
+            closeClienteModal();
+            try {
+                let payload = {};
+                if (idHidden) {
+                    payload = {
+                        op: 'editarCliente',
+                        clienteId: idHidden,
+                        novoNome: nome,
+                        novoTelefone: whatsapp,
+                        novoCPF: cpf
+                    };
+                } else {
+                    payload = {
+                        op: 'criarCliente',
+                        nome: nome,
+                        telefone: whatsapp,
+                        cpf: cpf
+                    };
+                }
+
+                const resp = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await resp.json();
+                if (result.sucesso) {
+                    syncData(true);
+                }
+            } catch (err) {
+                alert('Erro ao salvar cliente');
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        function novoCliente() {
+            openClienteModal(false);
+            closeModal(); // close Lançamento modal if open
+            closeAgendaModal(); // close Agenda modal if open
+        }
+
+        function editCliente(id) {
+            const cliente = clientes.find(c => String(c.id) === String(id));
+            if (!cliente) return;
+            document.getElementById('clienteIdHidden').value = cliente.id;
+            document.getElementById('clienteNome').value = cliente.nome || '';
+            document.getElementById('clienteWhatsapp').value = cliente.telefone || '';
+            document.getElementById('clienteCpf').value = cliente.cpf || '';
+            openClienteModal(true);
+        }
+
+        async function deleteCliente(id) {
+            const senha = prompt("🔒 Digite a senha para excluir o cliente e todos os seus vínculos:");
+            if (senha !== "0800") return alert("Senha incorreta!");
+
+            showLoader(true);
+            try {
+                const resp = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ op: 'excluirCliente', clienteId: id })
+                });
+                const result = await resp.json();
+                if (result.sucesso) {
+                    syncData(true);
+                } else {
+                    alert('Erro: ' + (result.erro || 'Desconhecido'));
+                }
+            } catch (e) {
+                alert('Erro na exclusão de cliente.');
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        function renderDashboard() {
+            const totalIn = entradas.reduce((acc, curr) => acc + (parseFloat(curr.valor) || 0), 0);
+            const totalOut = saidas.reduce((acc, curr) => acc + (parseFloat(curr.valor) || 0), 0);
+            const balance = totalIn - totalOut;
+
+            // Calculando PIX e Dinheiro baseado na Entrada
+            let totalPix = 0;
+            let totalMoney = 0;
+            entradas.forEach(e => {
+                const val = parseFloat(e.valor) || 0;
+                if (e.metodo === 'PIX') totalPix += val;
+                else if (e.metodo === 'DINHEIRO') totalMoney += val;
+            });
+
+            document.getElementById('currentBalance').textContent = formatCurrency(balance);
+            document.getElementById('currentBalance').style.color = balance >= 0 ? 'var(--text)' : 'var(--danger)';
+            document.getElementById('totalIn').textContent = formatCurrency(totalIn);
+            document.getElementById('totalOut').textContent = formatCurrency(totalOut);
+            document.getElementById('totalPix').textContent = formatCurrency(totalPix);
+            document.getElementById('totalMoney').textContent = formatCurrency(totalMoney);
+
+            const clientList = document.getElementById('homeClientList');
+            if (!clientList) return;
+            clientList.innerHTML = clientes.length ? '' : '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum cliente cadastrado.</p>';
+
+            clientes.sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''))).forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'activity-item';
+
+                const watsHtml = c.telefone ? `<button onclick="window.open('https://wa.me/55${String(c.telefone).replace(/\D/g, '')}', '_blank')" style="background: none; border: none; cursor:pointer; color: #25D366; font-size: 1.5rem; text-decoration: none; padding: 0 5px;"><i class="fab fa-whatsapp"></i></button>` : '';
+
+                div.innerHTML = `
+                    <div class="activity-icon in" style="background: rgba(255, 255, 255, 0.1); color: #fff; flex-shrink: 0;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="activity-info" style="flex: 1;">
+                        <h4 style="color: #fff;">${c.nome || 'Sem Nome'}</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 4px 0;">${c.telefone || 'Sem telefone'}</p>
+                    </div>
+                    <div style="display:flex; align-items:center; gap: 8px;">
+                        ${watsHtml}
+                        <button onclick="editCliente('${c.id}')" style="background: none; border: none; cursor:pointer; color: var(--info); font-size: 1.2rem; padding: 0 5px;"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteCliente('${c.id}')" style="background: none; border: none; cursor:pointer; color: var(--danger); font-size: 1.2rem; padding: 0 5px;"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                clientList.appendChild(div);
+            });
+        }
+
+        function renderHistory() {
+            const startStr = document.getElementById('historyDateStart').value; // yyyy-mm-dd
+            const endStr = document.getElementById('historyDateEnd').value;
+
+            let all = [
+                ...entradas.map(e => ({ ...e, type: 'in' })),
+                ...saidas.map(s => ({ ...s, type: 'out' }))
+            ].sort((a, b) => parseDate(b.data) - parseDate(a.data));
+
+            // Filtering
+            if (startStr || endStr) {
+                const sDate = startStr ? new Date(startStr + 'T00:00:00') : new Date(0);
+                const eDate = endStr ? new Date(endStr + 'T23:59:59') : new Date(9999, 0, 1);
+
+                all = all.filter(item => {
+                    const d = parseDate(item.data);
+                    return d >= sDate && d <= eDate;
+                });
+            }
+
+            const list = document.getElementById('fullHistory');
+            list.innerHTML = '';
+
+            if (all.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhuma atividade no período selecionado.</p>';
+            }
+
+            all.forEach(item => {
+                list.appendChild(createActivityItem(item));
+            });
+        }
+
+        function createActivityItem(item) {
+            const div = document.createElement('div');
+            div.className = 'activity-item';
+
+            const isFuel = item.categoria === 'Combustível' || item.categoria === 'Gasolina' || item.descricao.toLowerCase().includes('gasolina') || item.descricao.toLowerCase().includes('combustível');
+            const iconClass = item.type === 'in' ? 'in' : (isFuel ? 'fuel' : 'out');
+            const icon = item.type === 'in' ? 'fa-arrow-up' : (isFuel ? 'fa-gas-pump' : 'fa-arrow-down');
+
+            const isReceiptable = item.type === 'in' && (item.categoria === 'Frete' || item.categoria === 'Uber' || item.categoria === 'Agendamento');
+            const receiptBtnHTML = isReceiptable ?
+                `<button onclick="rebaixarComprovante('${item.descricao}', '${item.valor}', '${item.data}')" style="background: none; border: none; cursor:pointer; color: var(--info); font-size: 1.2rem; margin-right: 10px;" title="Baixar Comprovante"><i class="fas fa-file-pdf"></i></button>` : '';
+
+            div.innerHTML = `
+                <div class="activity-icon ${iconClass}">
+                    <i class="fas ${icon}"></i>
+                </div>
+                <div class="activity-info">
+                    <h4>${item.descricao}</h4>
+                    <p>${item.categoria || 'Sem Categoria'}</p>
+                </div>
+                <div class="activity-amount" style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                    <div style="display:flex; align-items: center;">
+                        ${receiptBtnHTML}
+                        <button onclick="if(confirm('Deseja excluir este lançamento?')) deleteTransaction('${item.id}', '${item.type}')" style="background: none; border: none; cursor:pointer; color: var(--danger); font-size: 1.2rem;" title="Deletar"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div>
+                        <span class="val" style="color: ${item.type === 'in' ? 'var(--success)' : 'var(--danger)'}">
+                            ${item.type === 'in' ? '+' : '-'} R$ ${parseFloat(item.valor).toFixed(2)}
+                        </span>
+                    </div>
+                    <span class="date">${item.data}</span>
+                </div>
+            `;
+
+            return div;
+        }
+
+        // Nova função para rebaixar
+        function rebaixarComprovante(descricao, valor, data) {
+            // Tentamos extrair o nome do cliente da descrição (Ex: "Frete - Maria")
+            let cliente = "";
+            let partes = descricao.split('-');
+            if (partes.length > 1) {
+                cliente = partes[1].trim();
+            }
+            gerarComprovante(cliente, valor, descricao, data);
+        }
+
+        async function handleEntrySubmit(e) {
+            e.preventDefault();
+            const type = document.getElementById('entryType').value;
+            let desc = document.getElementById('entryDesc').value;
+            const value = document.getElementById('entryValue').value;
+            const category = document.getElementById('entryCategory').value;
+            const method = document.getElementById('entryMethod').value;
+            const cliente = document.getElementById('entryCliente').value;
+
+            if ((category === 'Frete' || category === 'Uber') && cliente) {
+                desc = desc ? (desc + ' - ' + cliente) : (category + ' ' + cliente);
+            }
+
+            if (!desc || !value) return alert('Preecha os campos obrigatórios');
+
+            showLoader(true);
+            closeModal();
+
+            try {
+                const resp = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        op: 'registrarFluxo',
+                        tipo: type,
+                        descricao: desc,
+                        valor: parseFloat(value),
+                        metodo: method,
+                        categoria: category
+                    })
+                });
+                const result = await resp.json();
+                if (result.sucesso) {
+                    syncData(true);
+                    if (type === 'entrada' && confirm("Lançamento salvo! Deseja baixar o comprovante em PDF?")) {
+                        gerarComprovante(cliente, value, desc);
+                    }
+                }
+            } catch (err) {
+                alert('Erro ao salvar lançamento');
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        async function deleteTransaction(id, type) {
+            const senha = prompt("🔒 Digite a senha para excluir:");
+            if (senha !== "0800") return alert("Senha incorreta!");
+
+            showLoader(true);
+            try {
+                const resp = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        op: 'excluirFluxo',
+                        id: id,
+                        tipo: type === 'in' ? 'entrada' : 'saida'
+                    })
+                });
+                const res = await resp.json();
+                if (res.sucesso) syncData();
+            } catch (e) {
+                alert('Erro ao excluir');
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        // UI Helpers
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            document.getElementById('page-' + pageId).classList.add('active');
+            document.getElementById('nav-' + pageId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function openModal(type, category = '') {
+            document.getElementById('entryType').value = type;
+            document.getElementById('entryOverlay').style.display = 'flex';
+            document.getElementById('modalTitle').textContent = type === 'entrada' ? 'Novo Ganho' : 'Novo Gasto';
+            document.getElementById('groupMetodo').style.display = type === 'entrada' ? 'block' : 'none';
+
+            if (category) {
+                document.getElementById('entryCategory').value = category;
+                document.getElementById('entryDesc').value = category + " " + new Date().toLocaleDateString('pt-BR');
+            } else {
+                document.getElementById('entryCategory').value = 'Outros';
+                document.getElementById('entryDesc').value = '';
+            }
+
+            const groupCliente = document.getElementById('groupCliente');
+            groupCliente.style.display = (document.getElementById('entryCategory').value === 'Frete' || document.getElementById('entryCategory').value === 'Uber') ? 'block' : 'none';
+
+            document.getElementById('entryValue').value = '';
+        }
+
+        function renderAgenda() {
+            const list = document.getElementById('agendaList');
+            if (!list) return;
+
+            if (agenda.length === 0 || agenda.filter(a => a.status === 'PENDENTE').length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum agendamento pendente.</p>';
+                return;
+            }
+
+            list.innerHTML = '';
+
+            // Sort by date/time
+            agenda.filter(a => a.status === 'PENDENTE').sort((a, b) => {
+                const dateA = String(a.data || '').split('/').reverse().join('-') + 'T' + String(a.hora || '00:00');
+                const dateB = String(b.data || '').split('/').reverse().join('-') + 'T' + String(b.hora || '00:00');
+                return dateA.localeCompare(dateB);
+            }).forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'activity-item';
+                div.style.alignItems = 'flex-start';
+
+                let isToday = false;
+                try {
+                    const parts = String(item.data || '').split('/');
+                    if (parts.length >= 3) {
+                        const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                        const t = new Date();
+                        if (d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear()) isToday = true;
+                    }
+                } catch (e) { }
+
+                let horaExibicao = item.hora ? String(item.hora) : '';
+                if (horaExibicao && horaExibicao.includes('T')) {
+                    try {
+                        horaExibicao = new Date(horaExibicao).toISOString().split('T')[1].substring(0, 5);
+                    } catch (e) { }
+                } else if (horaExibicao.includes('1899') || horaExibicao.includes('Z')) {
+                    try {
+                        let matches = horaExibicao.match(/T(\d{2}:\d{2})/);
+                        if (matches) horaExibicao = matches[1];
+                    } catch (e) { }
+                }
+
+                const clienteObj = item.cliente ? clientes.find(c => c.nome === item.cliente) : null;
+
+                let watsHtml = '';
+                if (clienteObj && clienteObj.telefone) {
+                    let msg = `Olá, ${clienteObj.nome}\nConfirmo nosso agendamento para *${item.data}*`;
+                    if (horaExibicao) msg += ` às *${horaExibicao}*`;
+                    msg += `.\nValor combinado: R$ ${parseFloat(item.valor || 0).toFixed(2)}`;
+                    watsHtml = `<button onclick="window.open('https://wa.me/55${String(clienteObj.telefone).replace(/\D/g, '')}?text=${encodeURIComponent(msg)}', '_blank')" style="background: #25D366; color: #fff; border: none; padding: 12px; border-radius: 8px; cursor: pointer;"><i class="fab fa-whatsapp"></i></button>`;
+                }
+
+                div.innerHTML = `
+                    <div class="activity-icon" style="background: ${isToday ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${isToday ? 'var(--success)' : 'var(--danger)'}; flex-shrink: 0;">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="activity-info" style="flex: 1;">
+                        <h4 style="color: ${isToday ? 'var(--success)' : 'var(--danger)'};">${isToday ? 'HOJE - ' : ''}${item.data} ${horaExibicao ? 'às ' + horaExibicao : ''}</h4>
+                        <p style="font-size: 0.9rem; color: #fff; margin: 4px 0;">${item.cliente || 'Sem cliente associado'}</p>
+                        <p style="color: var(--text-muted); font-size: 0.8rem;">${item.endereco}</p>
+                        <p style="color: var(--success); font-weight: bold; margin-top: 5px;">R$ ${parseFloat(item.valor || 0).toFixed(2)}</p>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        ${watsHtml}
+                        <button onclick="concluirAgenda('${item.id}', '${item.cliente}', '${parseFloat(item.valor || 0)}', '${item.endereco}')" style="background: var(--success); color: #fff; border: none; padding: 12px; border-radius: 8px; cursor: pointer;"><i class="fas fa-check"></i></button>
+                        <button onclick="excluirAgenda('${item.id}')" style="background: var(--danger); color: #fff; border: none; padding: 12px; border-radius: 8px; cursor: pointer;"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function concluirAgenda(id, cliente, valor, detalhes) {
+            if (!confirm("Marcar como Concluído e já lançar o valor no Caixa como Frete?")) return;
+            showLoader(true);
+            try {
+                // First conclude
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ op: 'concluirAgendamento', id: id })
+                });
+
+                // Then launch
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        op: 'registrarFluxo',
+                        tipo: 'entrada',
+                        descricao: detalhes + (cliente !== 'null' ? ' - ' + cliente : ''),
+                        valor: parseFloat(valor),
+                        metodo: 'PIX', // default
+                        categoria: 'Frete'
+                    })
+                });
+
+                syncData(true);
+
+                if (confirm("Concluído e lançado com sucesso! Deseja baixar o comprovante em PDF?")) {
+                    gerarComprovante(cliente, valor, detalhes);
+                }
+            } catch (e) {
+                alert("Erro ao concluir");
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        async function excluirAgenda(id) {
+            if (!confirm("Excluir agendamento?")) return;
+            showLoader(true);
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ op: 'excluirAgendamento', id: id })
+                });
+                syncData();
+            } catch (e) {
+                alert("Erro ao excluir");
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        function openAgendaModal() {
+            document.getElementById('agendaOverlay').style.display = 'flex';
+            document.getElementById('agendaData').value = new Date().toISOString().split('T')[0];
+            document.getElementById('agendaHora').value = '';
+            document.getElementById('agendaDetalhes').value = '';
+            document.getElementById('agendaValor').value = '';
+            document.getElementById('agendaClienteSelect').value = '';
+        }
+
+        function closeAgendaModal() {
+            document.getElementById('agendaOverlay').style.display = 'none';
+        }
+
+        async function handleAgendaSubmit(e) {
+            e.preventDefault();
+            const dataStr = document.getElementById('agendaData').value;
+            const hora = document.getElementById('agendaHora').value;
+            const det = document.getElementById('agendaDetalhes').value;
+            const val = document.getElementById('agendaValor').value;
+            const cliente = document.getElementById('agendaClienteSelect').value;
+
+            if (!dataStr || !det) return alert('Preecha data e detalhes');
+
+            // convert yyyy-mm-dd to dd/mm/yyyy
+            const dParts = dataStr.split('-');
+            const finalData = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
+
+            showLoader(true);
+            closeAgendaModal();
+
+            try {
+                const resp = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        op: 'agendar',
+                        data: finalData,
+                        hora: hora,
+                        cliente: cliente,
+                        endereco: det,
+                        valor: parseFloat(val || 0)
+                    })
+                });
+                const result = await resp.json();
+                if (result.sucesso) {
+                    syncData();
+                }
+            } catch (err) {
+                alert('Erro ao agendar');
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('entryOverlay').style.display = 'none';
+        }
+
+        function showLoader(show) {
+            isLoading = show;
+            document.getElementById('loader').style.display = show ? 'block' : 'none';
+        }
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr || typeof dateStr !== 'string') return new Date(0);
+            const [d, m, y] = dateStr.split('/');
+            return new Date(y, m - 1, d);
+        }
+
+        // --- CALCULADORA ---
+        function openCalcModal() {
+            document.getElementById('calcOverlay').style.display = 'flex';
+            document.getElementById('calcValorKm').value = localStorage.getItem('junior_fretes_val_km') || "2.50";
+            document.getElementById('calcTotalKm').value = "";
+            updateCalcResult();
+        }
+
+        function closeCalcModal() {
+            document.getElementById('calcOverlay').style.display = 'none';
+        }
+
+        function saveCalcMin() {
+            const val = document.getElementById('calcValorMinimo').value;
+            localStorage.setItem('junior_fretes_val_min', val || "0");
+            alert("Valor Mínimo (Taxa Base) salvo como padrão!");
+        }
+
+        function saveCalcKm() {
+            const val = document.getElementById('calcValorKm').value;
+            localStorage.setItem('junior_fretes_val_km', val || "0");
+            alert("Valor por KM salvo como padrão!");
+        }
+
+        function updateCalcResult() {
+            const valKm = parseFloat(document.getElementById('calcValorKm').value) || 0;
+            const kms = parseFloat(document.getElementById('calcTotalKm').value) || 0;
+
+            // Só calcula Valor do KM * Quants KM rodado
+            const res = (valKm * kms);
+            document.getElementById('calcResultDisplay').textContent = formatCurrency(res);
+            return res;
+        }
+
+        function usarValorCalc(tipo) {
+            const kms = parseFloat(document.getElementById('calcTotalKm').value) || 0;
+            const res = updateCalcResult();
+            if (res <= 0) return alert("O valor está zerado!");
+
+            closeCalcModal();
+            if (tipo === 'Agendamento') {
+                openAgendaModal();
+                document.getElementById('agendaValor').value = res.toFixed(2);
+                document.getElementById('agendaDetalhes').value = kms > 0 ? `Frete Rota - ${kms}km` : 'Frete Rota';
+            } else {
+                openModal('entrada', tipo);
+                document.getElementById('entryValue').value = res.toFixed(2);
+                document.getElementById('entryDesc').value = kms > 0 ? `Frete Rota - ${kms}km` : 'Frete Rota';
+            }
+        }
+
+        function saveConfig() {
+            const url = document.getElementById('apiUrlInput').value;
+            if (url) {
+                localStorage.setItem('junior_fretes_api', url);
+                API_URL = url;
+                alert('Configuração salva!');
+                syncData(true);
+            }
+        }
+
+        function gerarComprovante(cliente, valor, desc, dataStr) {
+            if (!window.jspdf) return alert('Biblioteca PDF não carregou. Tente novamente.');
+
+            // Estilo Ticket (Térmica 80mm)
+            const doc = new window.jspdf.jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: [80, 200]
+            });
+
+            const margin = 5;
+            const width = 80;
+            const centerX = width / 2;
+            let y = 10;
+
+            function addDashedLine(yPos) {
+                doc.setDrawColor(150, 150, 150);
+                doc.setLineDashPattern([1, 1], 0);
+                doc.line(margin, yPos, width - margin, yPos);
+                doc.setLineDashPattern([], 0); // reset
+            }
+
+            // Cabeçalho e Marca
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text("JUNIOR FRETES", centerX, y, { align: "center" });
+            y += 6;
+
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text("Transporte Rápido - S-10 Vermelha", centerX, y, { align: "center" });
+            y += 8;
+
+            addDashedLine(y);
+            y += 8;
+
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "bold");
+            doc.text("COMPROVANTE DE SERVIÇO", centerX, y, { align: "center" });
+            y += 8;
+
+            addDashedLine(y);
+            y += 6;
+
+            // Busca do Cliente
+            const cObj = clientes.find(c => c.nome === cliente);
+            const nomeStr = cObj ? cObj.nome : "_______________________";
+            const cpfStr = cObj && cObj.cpf ? cObj.cpf : "_______________";
+            const telStr = cObj && cObj.telefone ? cObj.telefone : "_______________";
+
+            // Funções de Linha
+            doc.setFontSize(9);
+            const linhaNormal = (label, val) => {
+                doc.setFont("helvetica", "bold");
+                doc.text(label, margin, y);
+                doc.setFont("helvetica", "normal");
+                // Calcula posição para o valor caber
+                const splitVal = doc.splitTextToSize(val, 45);
+                doc.text(splitVal, margin + 22, y);
+                y += (5 * splitVal.length);
+            };
+
+            linhaNormal("Data/Hora:", dataStr || new Date().toLocaleString('pt-BR'));
+            linhaNormal("Cliente:", nomeStr);
+            linhaNormal("CPF/CNPJ:", cpfStr);
+            linhaNormal("Telefone:", telStr);
+            linhaNormal("Descrição:", desc || "Serviço de Transporte");
+
+            y += 2;
+            addDashedLine(y);
+            y += 8;
+
+            // Valor Total
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
+            doc.text("TOTAL PAGO:", margin, y);
+            doc.text("R$ " + parseFloat(valor || 0).toFixed(2), width - margin, y, { align: "right" });
+
+            y += 8;
+            addDashedLine(y);
+            y += 10;
+
+            // Rodapé
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "normal");
+            doc.text("Obrigado pela preferência!", centerX, y, { align: "center" });
+            y += 5;
+            doc.text("Recibo não-fiscal.", centerX, y, { align: "center" });
+
+            // Nome do arquivo base
+            let nomeLimpo = "SemCadastro";
+            if (cliente && cliente !== 'null') {
+                nomeLimpo = cliente.replace(/\s+/g, '');
+            }
+            doc.save("Recibo_" + nomeLimpo + ".pdf");
+        }
+    </script>
+</body>
+
+</html>
