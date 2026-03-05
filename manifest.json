@@ -1,0 +1,21 @@
+{
+    "name": "Junior Fretes",
+    "short_name": "Fretes",
+    "description": "Sistema de Gestão de Fretes e Uber",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#0f172a",
+    "icons": [
+        {
+            "src": "S10.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "S10.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
